@@ -52,6 +52,14 @@ int is_command_allowed(const char* command) {
     return 0;
 }
 
+void type(char* second_word) {
+    if (is_command_allowed(second_word)) {
+      printf("%s is a shell builtin\n", second_word);
+    } else {
+      printf("%s: not found\n", second_word);
+    }
+}
+
 void run_command(char* command) {
   if (!strcmp(command, "exit 0"))
     exit(0);
@@ -59,12 +67,7 @@ void run_command(char* command) {
     printf("%s\n", command + 5);
   }
   else if (!strcmp(get_word_at_index(command, 0), "type")){
-    char* second_word = get_word_at_index(command, 1);
-    if (is_command_allowed(get_word_at_index(command, 1))) {
-      printf("%s is a shell builtin\n", get_word_at_index(command, 1));
-    } else {
-      printf("%s: not found\n", get_word_at_index(command, 1));
-    }
+    type(get_word_at_index(command, 1));
   }
 }
 
