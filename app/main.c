@@ -2,21 +2,49 @@
 #include <string.h>
 #include <stdlib.h>
 
+const char *const list_commands_allow[] = {
+  "echo",
+  "exit",
+  "type"
+};
 
+int num_commands = sizeof(list_commands_allow) / sizeof(list_commands_allow[0]);
 
-char* get_first_word(char* input) {
-  char* firstWord = (char*)malloc(100);
-  int i = 0;
-  while (input[i] != ' ' && input[i] != '\0') {
-    firstWord[i] = input[i];
-    i++;
-  }
-  firstWord[i] = '\0';
-  return firstWord;
+char* get_word_at_index(char* input, int index) {
+    char* word = (char*)malloc(100);
+    if (word == NULL) {
+        return NULL;
+    }
+    
+    int i = 0, count = 0, wordPos = 0;
+    int inWord = 0;
+    
+    while (input[i] != '\0') {
+        if (input[i] != ' ') {
+            if (count == index) {
+                word[wordPos++] = input[i];
+                inWord = 1;
+            }
+        } else {
+            if (inWord) {
+                break;
+            }
+            count++;
+        }
+        i++;
+    }
+
+    word[wordPos] = '\0';
+    if (wordPos == 0) {
+        free(word);
+        return NULL;
+    }
+
+    return word;
 }
 
-int is_command_allowed(const char* command, const char *const list_commands_allow[], int numCommands) {
-    for (int i = 0; i < numCommands; i++) {
+int is_command_allowed(const char* command) {
+    for (int i = 0; i < num_commands; i++) {
         if (!strcmp(command, list_commands_allow[i])) {
             return 1;
         }
@@ -27,22 +55,20 @@ int is_command_allowed(const char* command, const char *const list_commands_allo
 void run_command(char* command) {
   if (!strcmp(command, "exit 0"))
     exit(0);
-  else if (!strcmp(get_first_word(command), "echo")){
+  else if (!strcmp(get_word_at_index(command, 0), "echo")){
     printf("%s\n", command + 5);
+  }
+  else if (!strcmp(get_word_at_index(command, 0), "type")){
+    char* second_word = get_word_at_index(command, 1);
+    if (is_command_allowed(get_word_at_index(command, 1))) {
+      printf("%s is a shell builtin\n", get_word_at_index(command, 1));
+    } else {
+      printf("%s: not found\n", get_word_at_index(command, 1));
+    }
   }
 }
 
-
-
 int main() {
-  const char *const list_commands_allow[] = {
-      "echo",
-      "exit"
-  };
-
-  int numCommands = sizeof(list_commands_allow) / sizeof(list_commands_allow[0]);
-
-
   while(1){
     printf("$ ");
     fflush(stdout);
@@ -50,8 +76,8 @@ int main() {
     fgets(input, 100, stdin);
     input[strlen(input) - 1] = '\0';
 
-    char* firstWord = get_first_word(input);
-    int const is_command_allow = is_command_allowed(firstWord, list_commands_allow, numCommands);
+    char* first_word = get_word_at_index(input, 0);
+    int const is_command_allow = is_command_allowed(first_word);
     if (is_command_allow) {
       run_command(input);
     } else {
