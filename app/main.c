@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 const char *const list_commands_allow[] = {
   "echo",
@@ -9,6 +10,9 @@ const char *const list_commands_allow[] = {
 };
 
 int num_commands = sizeof(list_commands_allow) / sizeof(list_commands_allow[0]);
+
+int is_executable(const char *path) { return access(path, X_OK) == 0; }
+
 
 char* get_word_at_index(char* input, int index) {
     char* word = (char*)malloc(100);
@@ -52,11 +56,36 @@ int is_command_allowed(const char* command) {
     return 0;
 }
 
+char *find_in_path(const char *command) {
+  char *path_env = getenv("PATH");
+  if (path_env == NULL) {
+    return NULL;
+  }
+  char *path_copy = strdup(path_env);
+  char *dir = strtok(path_copy, ":");
+  static char full_path[1024];
+  while (dir != NULL) {
+    snprintf(full_path, sizeof(full_path), "%s/%s", dir, command);
+    if (is_executable(full_path)) {
+      free(path_copy);
+      return full_path;
+    }
+    dir = strtok(NULL, ":");
+  }
+  free(path_copy);
+  return NULL;
+}
+
 void type(char* second_word) {
     if (is_command_allowed(second_word)) {
       printf("%s is a shell builtin\n", second_word);
     } else {
-      printf("%s: not found\n", second_word);
+      char *path = find_in_path(second_word);
+      if (path) {
+        printf("%s is %s\n", second_word, path);
+      } else {
+        printf("%s: not found\n", second_word);
+      }
     }
 }
 
