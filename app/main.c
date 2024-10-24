@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#define SIZE_COMMAND 100
+#define COMMAND_SIZE 100
 
 const char *const list_commands_allow[] = {
   "echo",
@@ -20,7 +20,7 @@ int is_executable(const char *path) { return access(path, X_OK) == 0; }
 
 
 char* get_word_at_index(char* input, int index) {
-    char* word = (char*)malloc(SIZE_COMMAND);
+    char* word = (char*)malloc(COMMAND_SIZE);
     if (word == NULL) {
         return NULL;
     }
@@ -95,10 +95,10 @@ void type(char* second_word) {
 }
 
 void run_external_command(char *input) {
-    char *args[SIZE_COMMAND];
+    char *args[COMMAND_SIZE];
     int i = 0;
     char *token = strtok(input, " ");
-    while (token != NULL && i < SIZE_COMMAND - 1) {
+    while (token != NULL && i < COMMAND_SIZE - 1) {
       args[i++] = token;
       token = strtok(NULL, " ");
     }
@@ -130,14 +130,11 @@ void pwd() {
     perror("getcwd");
   }
 }
-
 void cd(char* path) {
   int is_path_exist = chdir(path);
   if (is_path_exist == -1) {
-    printf("%s: No such file or directory\n", path);
-    exit;
-  }
-  cd(path);
+    printf("cd: %s: No such file or directory\n", path);
+  } 
 }
 
 void run_command(char* command) {
@@ -164,8 +161,8 @@ int main() {
   while(1){
     printf("$ ");
     fflush(stdout);
-    char input[SIZE_COMMAND];
-    fgets(input, SIZE_COMMAND, stdin);
+    char input[COMMAND_SIZE];
+    fgets(input, COMMAND_SIZE, stdin);
     input[strlen(input) - 1] = '\0';
 
     char* first_word = get_word_at_index(input, 0);
