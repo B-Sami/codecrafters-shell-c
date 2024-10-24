@@ -10,7 +10,8 @@ const char *const list_commands_allow[] = {
   "echo",
   "exit",
   "type",
-  "pwd"
+  "pwd",
+  "cd"
 };
 
 int num_commands = sizeof(list_commands_allow) / sizeof(list_commands_allow[0]);
@@ -121,7 +122,23 @@ void run_external_command(char *input) {
     }
 }
 
+void pwd() {
+  char cwd[1024];
+  if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    printf("%s\n", cwd);
+  } else {
+    perror("getcwd");
+  }
+}
 
+void cd(char* path) {
+  int is_path_exist = chdir(path);
+  if (is_path_exist == -1) {
+    printf("%s: No such file or directory\n", path);
+    exit;
+  }
+  cd(path);
+}
 
 void run_command(char* command) {
   if (!strcmp(command, "exit 0"))
@@ -133,12 +150,10 @@ void run_command(char* command) {
     type(get_word_at_index(command, 1));
   }
   else if (!strcmp(get_word_at_index(command, 0), "pwd")){
-    char cwd[1024];
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-      printf("%s\n", cwd);
-    } else {
-      perror("getcwd");
-    }
+    pwd();
+  }
+  else if (!strcmp(get_word_at_index(command, 0), "cd")){
+    cd(get_word_at_index(command, 1));
   }
   else {
     printf("Command not found\n");
