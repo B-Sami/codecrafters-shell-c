@@ -131,6 +131,9 @@ void pwd() {
   }
 }
 void cd(char* path) {
+  if (strcmp(path, "~") == 0) {
+    path = getenv("HOME");
+  }
   int is_path_exist = chdir(path);
   if (is_path_exist == -1) {
     printf("cd: %s: No such file or directory\n", path);
