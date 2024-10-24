@@ -2,6 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>
+
+#define SIZE_COMMAND 100
 
 const char *const list_commands_allow[] = {
   "echo",
@@ -15,7 +18,7 @@ int is_executable(const char *path) { return access(path, X_OK) == 0; }
 
 
 char* get_word_at_index(char* input, int index) {
-    char* word = (char*)malloc(100);
+    char* word = (char*)malloc(SIZE_COMMAND);
     if (word == NULL) {
         return NULL;
     }
@@ -89,6 +92,36 @@ void type(char* second_word) {
     }
 }
 
+void run_external_command(char *input) {
+    char *args[SIZE_COMMAND];
+    int i = 0;
+    char *token = strtok(input, " ");
+    while (token != NULL && i < SIZE_COMMAND - 1) {
+      args[i++] = token;
+      token = strtok(NULL, " ");
+    }
+    args[i] = NULL;
+
+    char *path = find_in_path(args[0]);
+    if (path) {
+      pid_t pid = fork();
+      if (pid == 0) {
+        execv(path, args);
+        perror("execv");
+        exit(EXIT_FAILURE);
+      } else if (pid > 0) {
+        int status;
+        waitpid(pid, &status, 0);
+      } else {
+        perror("fork");
+      }
+    } else {
+      printf("%s: command not found\n", args[0]);
+    }
+}
+
+
+
 void run_command(char* command) {
   if (!strcmp(command, "exit 0"))
     exit(0);
@@ -104,8 +137,8 @@ int main() {
   while(1){
     printf("$ ");
     fflush(stdout);
-    char input[100];
-    fgets(input, 100, stdin);
+    char input[SIZE_COMMAND];
+    fgets(input, SIZE_COMMAND, stdin);
     input[strlen(input) - 1] = '\0';
 
     char* first_word = get_word_at_index(input, 0);
@@ -113,7 +146,7 @@ int main() {
     if (is_command_allow) {
       run_command(input);
     } else {
-      printf("%s: command not found\n", input);
+      run_external_command(input);
     }
   }
   return 0;
