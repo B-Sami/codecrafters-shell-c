@@ -9,7 +9,8 @@
 const char *const list_commands_allow[] = {
   "echo",
   "exit",
-  "type"
+  "type",
+  "pwd"
 };
 
 int num_commands = sizeof(list_commands_allow) / sizeof(list_commands_allow[0]);
@@ -130,6 +131,17 @@ void run_command(char* command) {
   }
   else if (!strcmp(get_word_at_index(command, 0), "type")){
     type(get_word_at_index(command, 1));
+  }
+  else if (!strcmp(get_word_at_index(command, 0), "pwd")){
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+      printf("%s\n", cwd);
+    } else {
+      perror("getcwd");
+    }
+  }
+  else {
+    printf("Command not found\n");
   }
 }
 
